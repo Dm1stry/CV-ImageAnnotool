@@ -32,6 +32,7 @@ class SegmentWindow(QWidget):
 
         self.objects = {}
         self.current_object = {}
+        self.objects_image = None
 
         self.zoom = 1
         self.min_zoom = 1
@@ -246,6 +247,7 @@ class SegmentWindow(QWidget):
             
             self.resized_image = cv2.resize(self.source_image, (self.image_width, self.image_height))
             self.masked_image = self.resized_image.copy()
+            self.objects_image = self.resized_image.copy()
 
             cv2.namedWindow("Image")
             cv2.setMouseCallback("Image", self.callback)
@@ -416,15 +418,24 @@ class SegmentWindow(QWidget):
 # Отрисовка маски 
 # -------------------------------------------------------------------------
 
+    def rebuildObjectsImage(self, exclude_current=False):
+        self.objects_image = self.resized_image.copy()
+
+        for name, obj in self.objects.items():
+            if exclude_current and name == self.current_object_name:
+                continue
+
+            mask = cv2.resize(obj["mask"], (self.image_width, self.image_height))
+            self.objects_image = cv2.addWeighted(self.objects_image, 1.0, mask, 0.90, 0)
+
     def printMasks(self):
-        self.masked_image = self.resized_image.copy()
+        if self.objects_image is None:
+            self.rebuildObjectsImage()
+
+        self.masked_image = self.objects_image.copy()
 
         if len(self.current_object.keys()) > 0:
             mask = cv2.resize(self.current_object["mask"], (self.image_width, self.image_height))
-            self.masked_image = cv2.addWeighted(self.masked_image, 1.0, mask, 0.90, 0)
-
-        for obj in self.objects.keys():
-            mask = cv2.resize(self.objects[obj]["mask"], (self.image_width, self.image_height))
             self.masked_image = cv2.addWeighted(self.masked_image, 1.0, mask, 0.90, 0)
 
         if len(self.current_object.keys()) > 0:
@@ -503,6 +514,7 @@ class SegmentWindow(QWidget):
             self.current_object_name = self.current_class + "_" + str(self.objects_count[self.current_class])
             self.combobox_classes.setEnabled(True)
             self.delete_button.setEnabled(False)
+            self.rebuildObjectsImage()
 
 # -------------------------------------------------------------------------
 # Отмена сегентации объекта 
@@ -517,6 +529,7 @@ class SegmentWindow(QWidget):
         self.combobox_classes.setEnabled(True)
         self.delete_button.setEnabled(False)
 
+        self.rebuildObjectsImage()
         self.printMasks()
 
 # -------------------------------------------------------------------------
@@ -538,6 +551,7 @@ class SegmentWindow(QWidget):
             self.combobox_classes.setEnabled(False)
             self.delete_button.setEnabled(True)
 
+            self.rebuildObjectsImage(exclude_current=True)
             self.printMasks()
 
 # -------------------------------------------------------------------------
@@ -565,6 +579,7 @@ class SegmentWindow(QWidget):
 
             self.current_object_name = self.current_class + "_" + str(self.objects_count[self.current_class])
 
+            self.rebuildObjectsImage()
             self.printMasks()
             self.cancelObject()
 
@@ -681,6 +696,7 @@ class SegmentWindow(QWidget):
                     self.objects_list.addItem(name)
 
                 self.current_object_name = self.current_class + "_" + str(self.objects_count[self.current_class])
+                self.rebuildObjectsImage()
                 self.printMasks()
 
 # -------------------------------------------------------------------------
@@ -730,4 +746,5 @@ class SegmentWindow(QWidget):
                     self.objects_list.addItem(name)
 
             self.current_object_name = self.current_class + "_" + str(self.objects_count[self.current_class])
+            self.rebuildObjectsImage()
             self.printMasks()
