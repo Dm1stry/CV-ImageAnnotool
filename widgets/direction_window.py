@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QPushButton, QLabel, QComboBox
 # from widgets.sam2 import SAM2
+from widgets.image_canvas import ImageCanvas
 import os
 import cv2
 import numpy as np
@@ -51,9 +52,12 @@ class DirectionWindow(QWidget):
 
         # =======================================================
 
+        self.image_canvas = ImageCanvas(self.image_width, self.image_height)
+
         self.main_layout = QVBoxLayout()
         self.main_layout.addLayout(self.up_layout)
-        self.main_layout.addLayout(self.down_layout)     
+        self.main_layout.addWidget(self.image_canvas)
+        self.main_layout.addLayout(self.down_layout)
 
         self.setLayout(self.main_layout)
 
@@ -129,11 +133,8 @@ class DirectionWindow(QWidget):
             self.image = cv2.resize(self.image, (self.image_width, self.image_height))
 
             self.raw_image = self.image.copy()
-            cv2.namedWindow("Image")
-            cv2.setMouseCallback("Image", self.callback)
-            cv2.imshow("Image", self.image)
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
+            self.image_canvas.setMouseCallback(self.callback)
+            self.image_canvas.imshow(self.image)
 
 # -------------------------------------------------------------------------
 # Обработка колесика мыши и нажатия левой кнопки мыши 
@@ -185,7 +186,7 @@ class DirectionWindow(QWidget):
 
         # Stretch image to full size
         img = cv2.resize(img, (self.image.shape[1], self.image.shape[0]))
-        cv2.imshow("Image", img)
+        self.image_canvas.imshow(img)
 
 # -------------------------------------------------------------------------
 # Запись координат вектора  

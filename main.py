@@ -1,9 +1,15 @@
+import os
 import sys
+from PyQt5.QtCore import QLibraryInfo
 from PyQt5.QtWidgets import QApplication, QDialog
 from widgets.segmentation_window import SegmentWindow
 from widgets.dialog_window import DialogWindow
 from widgets.direction_window import DirectionWindow
 from widgets.detection_window import DetectionWindow
+
+# cv2 overwrites QT_QPA_PLATFORM_PLUGIN_PATH with its own bundled (incompatible) Qt
+# plugins on import, so point it back at PyQt5's plugins before creating QApplication.
+os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = QLibraryInfo.location(QLibraryInfo.PluginsPath)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -33,7 +39,6 @@ if __name__ == "__main__":
         elif selected == 2:
             window = DirectionWindow()
         window.show()
-        window.setFixedSize(450,200)
         sys.exit(app.exec_())  # запускаем только если диалог был успешно завершён
     else:
         print("Пользователь закрыл диалог")

@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout, QVBoxLayout, QLineEdit, QPushButton, QLabel, QComboBox, QCheckBox, QListWidget
 from PyQt5 import QtCore
 from widgets.sam2 import SAM2
+from widgets.image_canvas import ImageCanvas
 import os
 import cv2
 import numpy as np
@@ -142,14 +143,19 @@ class SegmentWindow(QWidget):
 
         # =======================================================
 
-        self.right_layout = QVBoxLayout() 
+        self.right_layout = QVBoxLayout()
         self.objects_list = QListWidget()
         self.right_layout.addWidget(self.objects_list)
 
         # =======================================================
 
+        self.image_canvas = ImageCanvas(self.image_width, self.image_height)
+
+        # =======================================================
+
         self.main_layout = QHBoxLayout()
         self.main_layout.addLayout(self.left_layout)
+        self.main_layout.addWidget(self.image_canvas)
         self.main_layout.addLayout(self.right_layout)
 
         self.setLayout(self.main_layout)
@@ -249,22 +255,8 @@ class SegmentWindow(QWidget):
             self.masked_image = self.resized_image.copy()
             self.objects_image = self.resized_image.copy()
 
-            cv2.namedWindow("Image")
-            cv2.setMouseCallback("Image", self.callback)
-            cv2.imshow("Image", self.masked_image)
-            key = cv2.waitKey(0)
-
-            # if key == ord('a'):
-            #     self.openLabel()
-            # elif key == ord('w'):
-            #     self.completeObject()
-            # elif key == ord('d'):
-            #     self.generateLable()
-            # elif key == ord('e'):
-            #     self.selectNextFile()
-            # elif key == ord('q'):
-            #     self.selectPrevFile()
-            # # cv2.destroyAllWindows()
+            self.image_canvas.setMouseCallback(self.callback)
+            self.image_canvas.imshow(self.masked_image)
 
 # -------------------------------------------------------------------------
 # Выбор нового класса  
@@ -364,23 +356,10 @@ class SegmentWindow(QWidget):
 
         # Stretch image to full size
         img = cv2.resize(img, (self.masked_image.shape[1], self.masked_image.shape[0]))
-        cv2.imshow("Image", img)
-
-        # key = cv2.waitKey(0)
-
-        # if key == ord('a'):
-        #     self.openLabel()
-        # elif key == ord('w'):
-        #     self.completeObject()
-        # elif key == ord('d'):
-        #     self.generateLable()
-        # elif key == ord('e'):
-        #     self.selectNextFile()
-        # elif key == ord('q'):
-        #     self.selectPrevFile()
+        self.image_canvas.imshow(img)
 
 # -------------------------------------------------------------------------
-# Прямой проход по sam  
+# Прямой проход по sam
 # -------------------------------------------------------------------------
 
     def segmentation(self):
@@ -450,20 +429,7 @@ class SegmentWindow(QWidget):
 
         img = cv2.resize(img, (self.masked_image.shape[1], self.masked_image.shape[0]))
 
-        cv2.imshow("Image", img)
-
-        # key = cv2.waitKey(0)
-
-        # if key == ord('a'):
-        #     self.openLabel()
-        # elif key == ord('w'):
-        #     self.completeObject()
-        # elif key == ord('d'):
-        #     self.generateLable()
-        # elif key == ord('e'):
-        #     self.selectNextFile()
-        # elif key == ord('q'):
-        #     self.selectPrevFile()
+        self.image_canvas.imshow(img)
 
 # -------------------------------------------------------------------------
 # Генерация бокса
